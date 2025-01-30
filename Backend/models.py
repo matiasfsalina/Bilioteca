@@ -22,6 +22,7 @@ class Lector(db.Model):
     suspendido_hasta = db.Column(db.Date, nullable=True)
     estado = db.Column(db.Enum('activo', 'suspendido', name='estado_lectores'), default='activo')
     creado_el = db.Column(db.DateTime, default=datetime.utcnow)
+    reservas = db.relationship('Reserva', back_populates='lector')
 
 # Modelo para los libros
 class Libro(db.Model):
@@ -36,8 +37,11 @@ class Libro(db.Model):
     cantidad_disponible = db.Column(db.Integer, nullable=False)
     id_categorias = db.Column(db.Integer, db.ForeignKey('categorias.id_categorias'))
     creado_el = db.Column(db.DateTime, default=datetime.utcnow)
+    reservas = db.relationship('Reserva', back_populates='libro')
 
     categoria = db.relationship('Categoria', back_populates="libros")
+    # Relación con libros_etiquetas
+    etiquetas = db.relationship('LibroEtiqueta', back_populates='libro')
 
 # Modelo para las categorías de libros
 class Categoria(db.Model):
@@ -87,3 +91,24 @@ class Reserva(db.Model):
     libro = db.relationship('Libro')
     lector = db.relationship('Lector')
 
+# Modelo para las etiquetas
+class Etiqueta(db.Model):
+    __tablename__ = 'etiquetas'
+    id_etiquetas = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), unique=True, nullable=False)
+    
+    # Relación con libros_etiquetas (muchos a muchos)
+    libros = db.relationship('LibroEtiqueta', back_populates='etiqueta')
+
+# Modelo para la relación muchos a muchos entre libros y etiquetas
+class LibroEtiqueta(db.Model):
+    __tablename__ = 'libros_etiquetas'
+    id = db.Column(db.Integer, primary_key=True)
+    id_libros = db.Column(db.Integer, db.ForeignKey('libros.id_libros'), nullable=False)
+    id_etiquetas = db.Column(db.Integer, db.ForeignKey('etiquetas.id_etiquetas'), nullable=False)
+    
+    # Relaciones con libros y etiquetas
+    libro = db.relationship('Libro', back_populates='etiquetas')
+    etiqueta = db.relationship('Etiqueta', back_populates='libros')
+
+    Libro.etiquetas = db.relationship('LibroEtiqueta', back_populates="libro")

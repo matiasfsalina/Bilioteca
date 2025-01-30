@@ -4,11 +4,11 @@ from database import db
 from config import Config
 import jwt
 import datetime
+from flask_bcrypt import Bcrypt
 
-
-from werkzeug.security import check_password_hash, generate_password_hash
 
 bibliotecarios_bp = Blueprint('bibliotecarios', __name__)
+bcrypt = Bcrypt()
 
 #22/1/25
 @bibliotecarios_bp.route('/login', methods=['POST'])
@@ -18,7 +18,7 @@ def login():
     password = data.get('password')
 
     bibliotecario = Bibliotecario.query.filter_by(email=email).first()
-    if bibliotecario and check_password_hash(bibliotecario.password, password):
+    if bibliotecario and bcrypt.check_password_hash(bibliotecario.password, password):
         token = jwt.encode(
             {
                 'id': bibliotecario.id_bibliotecarios,
@@ -27,13 +27,13 @@ def login():
             Config.SECRET_KEY,
             algorithm="HS256"
         )
-        return jsonify({'token': token})
+        return jsonify({'token': token, 'id': bibliotecario.id_bibliotecarios })    # Incluye el ID en la respuesta
     return jsonify({'message': 'Credenciales incorrectas'}), 401
 
 @bibliotecarios_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    hashed_password = generate_password_hash(data['password'], method='sha256')
+    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     new_bibliotecario = Bibliotecario(
         nombre=data['nombre'],
         email=data['email'],
@@ -57,7 +57,7 @@ def register():
 @bibliotecarios_bp.route('/bibliotecarios', methods=['POST'])
 def create_bibliotecario():
     data = request.get_json()
-    hashed_password = generate_password_hash(data['password'], method='sha256')
+    hashed_password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
     new_bibliotecario = Bibliotecario(
         nombre=data['nombre'],
         email=data['email'],

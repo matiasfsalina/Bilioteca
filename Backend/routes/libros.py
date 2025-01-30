@@ -22,10 +22,15 @@ def create_libro():
     db.session.commit()
     return jsonify({'message': 'Libro creado'}), 201
 
-# Obtener todos los libros
+# Obtener todos los libros o buscar por título
 @libros_bp.route('/libros', methods=['GET'])
 def get_libros():
-    libros = Libro.query.all()
+    query = request.args.get('search', None)  # Obtén el parámetro 'search' de la URL
+    if query:
+        libros = Libro.query.filter(Libro.titulo.ilike(f"%{query}%")).all()
+    else:
+        libros = Libro.query.all()
+
     result = [{
         "id": l.id_libros,
         "titulo": l.titulo,
@@ -34,9 +39,12 @@ def get_libros():
         "editorial": l.editorial,
         "anio_publicacion": l.anio_publicacion,
         "cantidad_total": l.cantidad_total,
-        "cantidad_disponible": l.cantidad_disponible
+        "cantidad_disponible": l.cantidad_disponible,
+        "categoria": l.categoria.nombre if l.categoria else None,  # Relación con categorías
+        "etiquetas": [etiqueta.nombre for etiqueta in l.etiquetas]  # Relación con etiquetas
     } for l in libros]
     return jsonify(result)
+
 
 # Obtener un libro por ID
 @libros_bp.route('/libros/<int:id>', methods=['GET'])

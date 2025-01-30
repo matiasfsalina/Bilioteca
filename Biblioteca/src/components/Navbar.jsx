@@ -6,7 +6,7 @@ import { register, login } from "../api/api";
 const Navbar = () => {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [registerData, setRegisterData] = useState({ nombre: "", email: "", password: "" });
+  const [registerData, setRegisterData] = useState({ nombre: "", email: "", password: "", estado: "activo", });
   const [loginData, setLoginData] = useState({ email: "", password: "" });
 
   const handleRegister = async () => {
@@ -21,24 +21,27 @@ const Navbar = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await login(loginData);
-      localStorage.setItem("token", response.data.token);
+      const response = await login(loginData); // Llama a la función de autenticación
+      const { token, id } = response.data; // Extrae el token y el ID del bibliotecario
+  
+      localStorage.setItem("token", token); // Guarda el token en el localStorage
+      localStorage.setItem("userId", id); // Guarda el ID en el localStorage
       alert("Inicio de sesión exitoso");
       setShowLoginModal(false);
-      window.location.href = "/"; // Redirige al home después de iniciar sesión
+      window.location.href = "/Gestor"; // Redirige al Gestor después de iniciar sesión
     } catch (error) {
+      console.error(error);
       alert("Error al iniciar sesión");
     }
   };
+  
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     alert("Sesión cerrada");
-    window.location.href = "/login"; // Redirige al login
+    window.location.href = "/"; // Redirige a la pagina principal
   };
-
-
-
+  
   return (
     <header className="bg-white shadow-md">
       <div className="max-w-screen-lg mx-auto flex justify-between items-center p-4">
@@ -129,6 +132,12 @@ const Navbar = () => {
               className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
             >
               Iniciar Sesión
+            </button>         
+            <button
+              onClick={handleLogout}
+              className="w-full mt-2 bg-gray-400 text-white py-2 rounded hover:bg-gray-500"
+            >
+              Cerrar Sesion
             </button>
             <button
               onClick={() => setShowLoginModal(false)}

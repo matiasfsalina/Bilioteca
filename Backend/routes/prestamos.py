@@ -8,6 +8,24 @@ prestamos_bp = Blueprint('prestamos', __name__)
 @prestamos_bp.route('/prestamos', methods=['POST'])
 def create_prestamo():
     data = request.get_json()
+
+    # Validación básica de datos
+    if not all(key in data for key in ('id_libros', 'id_lectores', 'id_bibliotecarios', 'fecha_fin')):
+        return jsonify({'error': 'Faltan datos obligatorios'}), 400
+
+    # Verificar que el libro y lector existen
+    libro = Libro.query.get(data['id_libros'])
+    lector = Lector.query.get(data['id_lectores'])
+    bibliotecario = Bibliotecario.query.get(data['id_bibliotecarios'])
+
+    if not libro:
+        return jsonify({'error': 'Libro no encontrado'}), 404
+    if not lector:
+        return jsonify({'error': 'Lector no encontrado'}), 404
+    if not bibliotecario:
+        return jsonify({'error': 'Bibliotecario no encontrado'}), 404
+
+    # Crear el préstamo
     new_prestamo = Prestamo(
         id_libros=data['id_libros'],
         id_lectores=data['id_lectores'],
@@ -16,7 +34,9 @@ def create_prestamo():
     )
     db.session.add(new_prestamo)
     db.session.commit()
+
     return jsonify({'message': 'Préstamo creado'}), 201
+
 
 # Obtener todos los préstamos
 @prestamos_bp.route('/prestamos', methods=['GET'])

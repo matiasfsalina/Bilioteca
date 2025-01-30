@@ -8,23 +8,38 @@ lectores_bp = Blueprint('lectores', __name__)
 @lectores_bp.route('/lectores', methods=['POST'])
 def create_lector():
     data = request.get_json()
+
+    if 'nombre' not in data or 'email' not in data:
+        return jsonify({'message': 'Nombre y email son obligatorios'}), 400
+
     new_lector = Lector(
         nombre=data['nombre'],
         email=data['email'],
-        password=data['password'],
-        estado=data['estado'],
+        password=data.get('password', 'default_password'),
+        estado=data.get('estado', 'activo'),
         deudor_contar=data.get('deudor_contar', 0),
         suspendido_hasta=data.get('suspendido_hasta', None)
     )
     db.session.add(new_lector)
     db.session.commit()
-    return jsonify({'message': 'Lector creado'}), 201
+    return jsonify({'message': 'Lector creado con éxito','id': new_lector.id_lectores}), 201 # Incluye el ID del lector en la respuesta
+
 
 # Obtener todos los lectores
 @lectores_bp.route('/lectores', methods=['GET'])
 def get_lectores():
     lectores = Lector.query.all()
-    result = [{"id": l.id_lectores, "nombre": l.nombre, "email": l.email, "estado": l.estado} for l in lectores]
+    result = [
+        {
+            "id": l.id_lectores,
+            "nombre": l.nombre,
+            "email": l.email,
+            "estado": l.estado,
+            "deudor_contar": l.deudor_contar,
+            "suspendido_hasta": l.suspendido_hasta
+        } 
+        for l in lectores
+    ]
     return jsonify(result)
 
 # Obtener un lector por ID
