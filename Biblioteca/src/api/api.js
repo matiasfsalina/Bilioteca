@@ -37,6 +37,32 @@ api.interceptors.response.use(
   }
 );
 
+//mostrar datos del bibliotecario
+export const getCurrentUser = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    if (!token) throw new Error("Token no encontrado");
+
+    const response = await fetch(`${API_URL}/bibliotecarios${userId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Error al obtener los datos del usuario");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 // Función para obtener libros
 export const obtenerLibros = () => {
   return api.get("/libros");

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Filters from "../components/Filters";
 import BookList from "../components/BookList";
@@ -9,10 +9,26 @@ const Home = () => {
   const [category, setCategory] = useState("Todas");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
-  const handleSearch = (e) => {
+  const [books, setBooks] = useState([]);
+  
+  // Función para manejar la búsqueda
+  const handleSearch = async (e) => {
     e.preventDefault();
-    console.log(`Buscando: ${searchQuery}`);
+    
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:5000/libros?search=${(searchQuery)}`
+      );
+      
+      if (!response.ok) {
+        throw new Error("Error al buscar libros");
+      }
+  
+      const data = await response.json();
+      setBooks(data); // Actualiza la lista con los libros encontrados
+    } catch (error) {
+      console.error("Error en la búsqueda:", error);
+    }
   };
 
   return (
@@ -58,7 +74,25 @@ const Home = () => {
           </button>
         </form>
 
-
+        {/* Mostrar resultados */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {books.map((book) => (
+                    <div key={book.id} className="border p-4 rounded-lg shadow">
+                      <h2 className="font-bold text-lg">{book.titulo}</h2>
+                      <p><strong>ID:</strong> {book.id}</p>
+                      <p><strong>Autor:</strong> {book.autor}</p>
+                      <p><strong>Editorial:</strong> {book.editorial}</p>
+                      <p><strong>Año:</strong> {book.anio_publicacion}</p>
+                      <p><strong>Cantidad disponible:</strong> {book.cantidad_disponible}</p>
+                      <p><strong>Cantidad total:</strong> {book.cantidad_total}</p>
+                      {book.categoria && <p><strong>Categoría:</strong> {book.categoria}</p>}
+                      {book.etiquetas && book.etiquetas.length > 0 && (
+                        <p><strong>Etiquetas:</strong> {book.etiquetas.join(", ")}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+       
         {/* Filtros por categoría */}
         <Filters setCategory={setCategory} />
 
